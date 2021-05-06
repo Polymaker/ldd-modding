@@ -1,7 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -9,12 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="LDD.Common">
-      <HintPath>..\..\ldd-core\LDD.Common\bin\Debug\netstandard2.0\LDD.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="LDD.Core">
-      <HintPath>..\..\ldd-core\LDD.Core\bin\Debug\netstandard2.0\LDD.Core.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\ldd-core\LDD.Common\LDD.Common.csproj" />
+    <ProjectReference Include="..\ldd-core\LDD.Core\LDD.Core.csproj" />
   </ItemGroup>
 
 </Project>
