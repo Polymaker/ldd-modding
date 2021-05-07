@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ldd-core\LDD.Common\LDD.Common.csproj" />
-    <ProjectReference Include="..\ldd-core\LDD.Core\LDD.Core.csproj" />
+    <ProjectReference Include="..\..\ldd-core\LDD.Common\LDD.Common.csproj" />
+    <ProjectReference Include="..\..\ldd-core\LDD.Core\LDD.Core.csproj" />
   </ItemGroup>
 
 </Project>
