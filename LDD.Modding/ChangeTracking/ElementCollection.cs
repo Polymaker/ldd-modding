@@ -65,7 +65,7 @@ namespace LDD.Modding
         {
             base.BeforeRemoveItem(item);
             if (Owner != null)
-                item.BeginChangeParent(null);
+                item.BeginChangeParent(Owner, null);
             else
                 item.AssignProject(null);
         }
@@ -81,7 +81,7 @@ namespace LDD.Modding
         {
             base.BeforeAddItem(item);
             if (Owner != null)
-                item.BeginChangeParent(Owner);
+                item.BeginChangeParent(null, Owner);
             else
                 item.AssignProject(_Project);
         }

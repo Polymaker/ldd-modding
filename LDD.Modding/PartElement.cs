@@ -84,22 +84,23 @@ namespace LDD.Modding
 
         private bool RemovingParent;
 
-        internal void BeginChangeParent(PartElement newParent)
+        internal void BeginChangeParent(PartElement oldParent, PartElement newParent)
         {
             if (Parent == newParent || RemovingParent)
                 return;
 
-            if (Parent != null && newParent != null)
-                System.Diagnostics.Trace.WriteLine("Element is swapping parents");
 
             ParentChanging?.Invoke(this, EventArgs.Empty);
 
-            if (Parent != null)
+            if (Parent != null && (newParent != null || oldParent == null))
             {
+                if (newParent != null)
+                    System.Diagnostics.Trace.WriteLine("Element is swapping parents");
                 RemovingParent = true;
                 TryRemove();
                 RemovingParent = false;
             }
+
         }
 
         internal void AssignParent(PartElement parent)
