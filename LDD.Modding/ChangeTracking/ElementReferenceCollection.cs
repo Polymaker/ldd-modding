@@ -38,7 +38,7 @@ namespace LDD.Modding
         protected override void BeforeRemoveItem(ElementReference item)
         {
             base.BeforeRemoveItem(item);
-            item.BeginChangeParent(Owner);
+            item.BeginChangeParent(Owner, null);
         }
 
         protected override void AfterRemoveItem(ElementReference item)
@@ -50,7 +50,7 @@ namespace LDD.Modding
         protected override void BeforeAddItem(ElementReference item)
         {
             base.BeforeAddItem(item);
-            item.BeginChangeParent(Owner);
+            item.BeginChangeParent(null, Owner);
         }
 
         protected override void AfterAddItem(ElementReference item)
