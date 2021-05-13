@@ -506,30 +506,9 @@ namespace LDD.Modding
 
         public void CleanUpAndSave(string filename)
         {
-            //string directory = Path.GetDirectoryName(filename);
+            RemoveUnreferencedMeshes();
 
-            //if (!Directory.Exists(directory))
-            //    Directory.CreateDirectory(directory);
-
-            var projectXml = GenerateProjectXml();
-            foreach(var mesh in Meshes)
-            {
-                if (!mesh.GetReferences().Any())
-                {
-                    var meshElem = projectXml.Descendants(ModelMesh.NODE_NAME)
-                        .FirstOrDefault(e => e.ReadAttribute("ID", string.Empty) == mesh.ID);
-                    if (meshElem != null)
-                        meshElem.Remove();
-                }
-            }
             Save(filename);
-            //projectXml.Save(filename);
-
-            //foreach (var mesh in Meshes)
-            //{
-            //    if (mesh.Geometry != null)
-            //        mesh.MarkSaved(true);
-            //}
         }
 
 
@@ -1455,18 +1434,41 @@ namespace LDD.Modding
 
         #region Project File/Directory Handling
 
+        private XDocument _ProjectXml;
+
         public XDocument GetProjectXml()
         {
             if (IsLoadedFromDisk)
             {
                 try 
                 {
+                    if (_ProjectXml != null)
+                        return _ProjectXml;
                     if (ProjectPath.EndsWith(".xml"))
                         return XDocument.Load(ProjectPath);
                 }
                 catch { }
             }
             return null;
+        }
+
+        public void LoadProjectXml()
+        {
+            try
+            {
+                if (IsLoadedFromDisk && ProjectPath.EndsWith(".xml"))
+                    _ProjectXml = XDocument.Load(ProjectPath);
+
+            }
+            catch 
+            {
+                _ProjectXml = null;
+            }
+        }
+
+        public void UnloadProjectXml()
+        {
+            _ProjectXml = null;
         }
 
         #endregion
