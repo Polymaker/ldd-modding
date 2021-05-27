@@ -204,8 +204,8 @@ namespace LDD.Modding
                 }
                 else
                 {
-                    if (allModels.Any(x => x.IsTextured))
-                        AddMessage("SURFACE_IGNORE_TEXTURED_MODEL", ValidationLevel.Info, SurfaceID);
+                    //if (allModels.Any(x => x.IsTextured))
+                    //    AddMessage("SURFACE_IGNORE_TEXTURED_MODEL", ValidationLevel.Info, SurfaceID);
                 }
             }
 

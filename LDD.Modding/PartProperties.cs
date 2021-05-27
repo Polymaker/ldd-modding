@@ -31,10 +31,6 @@ namespace LDD.Modding
         private int _PartVersion;
         private bool _Decorated;
         private bool _Flexible;
-        private string _Authors;
-        private string _DerivedFrom;
-        private string _OriginalAuthor;
-        private string _ChangeLog;
 
         public int PartID
         {
@@ -120,39 +116,14 @@ namespace LDD.Modding
             set => SetPropertyValue(ref _Flexible, value);
         }
 
-        #region Credits
-
-        //public string Authors
-        //{
-        //    get => _Authors;
-        //    set => SetPropertyValue(ref _Authors, value);
-        //}
-
-        //public string DerivedFrom
-        //{
-        //    get => _DerivedFrom;
-        //    set => SetPropertyValue(ref _DerivedFrom, value);
-        //}
-
-        //public string OriginalAuthor
-        //{
-        //    get => _OriginalAuthor;
-        //    set => SetPropertyValue(ref _OriginalAuthor, value);
-        //}
-
-        //public string ChangeLog
-        //{
-        //    get => _ChangeLog;
-        //    set => SetPropertyValue(ref _ChangeLog, value);
-        //}
-
-        #endregion
+        public List<XElement> ExtraElements { get; set; }
+        public Dictionary<string, string> ExtraAnnotations { get; set; }
 
         private PartProperties()
         {
-            //Authors = string.Empty;
-            //ChangeLog = string.Empty;
             Description = string.Empty;
+            ExtraElements = new List<XElement>();
+            ExtraAnnotations = new Dictionary<string, string>();
         }
 
         public PartProperties(PartProject project) : this()
@@ -186,56 +157,14 @@ namespace LDD.Modding
             if (part.Primitive.DefaultOrientation != null)
                 DefaultOrientation = ItemTransform.FromLDD(part.Primitive.DefaultOrientation);
 
-            if (part.Primitive.ExtraElements.Any())
-            {
+            if (part.Primitive.ExtraAnnotations.Count > 0)
+                ExtraAnnotations = part.Primitive.ExtraAnnotations;
 
-            }
-
-            //if (!string.IsNullOrEmpty(part.Primitive.Comments))
-            //    ParseComments(part.Primitive.Comments);
+            if (part.Primitive.ExtraElements.Count > 0)
+                ExtraElements = part.Primitive.ExtraElements;
         }
 
-        //public void ParseComments(string comments)
-        //{
-        //    ChangeLog = string.Empty;
-
-        //    bool IsMatch(string input, string pattern, out string result)
-        //    {
-        //        result = null;
-        //        var match = Regex.Match(input, pattern, RegexOptions.IgnoreCase);
-        //        if (match.Success && match.Groups.Count > 1)
-        //            result = match.Groups[1].Value;
-        //        return match.Success;
-        //    }
-
-        //    using (var sr = new StringReader(comments))
-        //    {
-        //        string line;
-
-        //        while ((line = sr.ReadLine()) != null)
-        //        {
-        //            if (IsMatch(line, "(?:created|updated|LDD).+?by\\s?:? (.+)", out string author))
-        //            {
-        //                Authors = author;
-        //            }
-        //            else if (IsMatch(line, "derived from\\s?:? (.+)", out string derivedFrom))
-        //            {
-        //                DerivedFrom = derivedFrom;
-        //            }
-        //            else if (IsMatch(line, "orginal author\\s?:? (.+)", out string originalAuthor))
-        //            {
-        //                OriginalAuthor = originalAuthor;
-        //            }
-        //            else if (!string.IsNullOrEmpty(line))
-        //            {
-        //                if (!string.IsNullOrEmpty(ChangeLog))
-        //                    ChangeLog += Environment.NewLine;
-        //                ChangeLog += line;
-        //            }
-        //        }
-        //    }
-        //}
-
+       
         private void UnBindPhysicsAttributes()
         {
             if (PhysicsAttributes != null)
@@ -301,21 +230,19 @@ namespace LDD.Modding
             if (DefaultCamera != null)
                 propsElem.Add(XmlHelper.DefaultSerialize(DefaultCamera, nameof(DefaultCamera)));
 
-            //if (!string.IsNullOrWhiteSpace(Authors))
-            //    propsElem.Add(new XElement(nameof(Authors), Authors));
+            if (ExtraAnnotations.Count > 0)
+            {
+                var extraElem = propsElem.AddElement("UnknownAnnotations");
+                foreach (var elem in ExtraAnnotations)
+                    extraElem.Add(new XElement("Annotation",  new XAttribute(elem.Key, elem.Value)));
+            }
 
-            //if (!string.IsNullOrWhiteSpace(DerivedFrom))
-            //{
-            //    var derivedElem = propsElem.AddElement(nameof(DerivedFrom));
-            //    derivedElem.WriteAttribute(nameof(DerivedFrom), DerivedFrom);
-
-            //    if (!string.IsNullOrWhiteSpace(OriginalAuthor))
-            //        derivedElem.WriteAttribute(nameof(OriginalAuthor), OriginalAuthor);
-            //}
-            
-
-            //if (!string.IsNullOrWhiteSpace(ChangeLog))
-            //    propsElem.Add(new XElement(nameof(ChangeLog), ChangeLog));
+            if (ExtraElements.Count > 0)
+            {
+                var extraElem = propsElem.AddElement("UnknownElements");
+                foreach (var elem in ExtraElements)
+                    extraElem.Add(elem);
+            }
 
             return propsElem;
         }
@@ -336,8 +263,6 @@ namespace LDD.Modding
 
             Description = element.ReadElement(nameof(Description), string.Empty);
             PartVersion = element.ReadElement(nameof(PartVersion), 1);
-
-            
 
             Decorated = element.ReadElement(nameof(Decorated), false);
             Flexible = element.ReadElement(nameof(Flexible), false);
@@ -387,6 +312,24 @@ namespace LDD.Modding
             if (element.HasElement("PrimitiveVersion", out XElement versionElem))
             {
                 PrimitiveFileVersion = VersionInfo.FromXmlElement(versionElem);
+            }
+
+            ExtraAnnotations.Clear();
+            if (element.HasElement("UnknownAnnotations", out XElement extraAnnotations))
+            {
+                foreach (var annotationElem in extraAnnotations.Elements())
+                {
+                    var attr = annotationElem.Attributes().FirstOrDefault();
+                    if (attr != null)
+                        ExtraAnnotations.Add(attr.Name.LocalName, attr.Value);
+                }
+            }
+
+            ExtraElements.Clear();
+            if (element.HasElement("UnknownElements", out XElement extraElements))
+            {
+                foreach (var customElem in extraElements.Elements())
+                    ExtraElements.Add(customElem);
             }
         }
 

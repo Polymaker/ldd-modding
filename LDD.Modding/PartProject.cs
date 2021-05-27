@@ -246,6 +246,15 @@ namespace LDD.Modding
                 boneElement.LoadFromLDD(flexBone);
             }
 
+            if (lddPart.Surfaces.Count == 0)
+            {
+                var surfaceElement = new PartSurface(
+                    0, lddPart.Primitive.GetSurfaceMaterialIndex(0)
+                );
+                surfaceElement.ID = StringUtils.GenerateUUID($"Surface{0}", 8);
+                project.Surfaces.Add(surfaceElement);
+            }
+
             foreach (var meshSurf in lddPart.Surfaces)
             {
                 int surfaceID = meshSurf.SurfaceID;
@@ -1632,6 +1641,13 @@ namespace LDD.Modding
             }
 
             primitive.Comments = ProjectInfo.GenerateXmlComments();
+            if (Properties.ExtraAnnotations.Count > 0)
+            {
+                foreach (var annotation in Properties.ExtraAnnotations)
+                    primitive.ExtraAnnotations.Add(annotation.Key, annotation.Value);
+            }
+            if (Properties.ExtraElements.Count > 0)
+                primitive.ExtraElements.AddRange(Properties.ExtraElements);
 
             return primitive;
         }
