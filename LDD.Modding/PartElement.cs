@@ -49,6 +49,8 @@ namespace LDD.Modding
 
         public PartElement Parent { get; internal set; }
 
+        public PartElement RootElement => Parent != null ? Parent.RootElement : this;
+
         public int HierarchyLevel => Parent == null ? 0 : Parent.HierarchyLevel + 1;
 
         internal bool IsInitializing { get; set; }

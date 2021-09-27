@@ -44,6 +44,8 @@ namespace LDD.Modding
             set => SetPropertyValue(ref _TargetBoneID, value);
         }
 
+        public PartBone TargetBone => Project.Bones.FirstOrDefault(x => x.BoneID == TargetBoneID);
+
         public int TargetConnectionIndex { get; set; } = -1;
 
         public string TargetConnectionID
@@ -108,6 +110,13 @@ namespace LDD.Modding
             base.OnPropertyValueChanged(args);
             if (args.PropertyName == nameof(Transform))
                 TranformChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected override void OnChildPropertyValueChanged(string propertyName, object childObject, PropertyValueChangedEventArgs args)
+        {
+            base.OnChildPropertyValueChanged(propertyName, childObject, args);
+            if (propertyName == nameof(PhysicsAttributes) && !IsLoading)
+                RaisePropertyValueChanged(childObject, args);
         }
 
         #region Convertion from/to LDD

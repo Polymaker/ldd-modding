@@ -157,8 +157,9 @@ namespace LDD.Modding
 
             if (ReferencedStuds.Count > 1)
                 AddMessage("MODEL_MORE_THAN_ONE_STUD", ValidationLevel.Warning);
-            //else if (!AdjacentStuds.Any())
-            //    AddMessage("MODEL_ADJ_STUDS_NOT_DEFINED", ValidationLevel.Warning);//TODO: implement message
+
+            if (!AdjacentStuds.Any())
+                AddMessage("MODEL_ADJ_STUDS_NOT_DEFINED", ValidationLevel.Warning);
 
             var connIDs = ReferencedStuds.Concat(AdjacentStuds).Select(x => x.ConnectionID).Distinct();
             if (connIDs.Count() > 1)

@@ -160,6 +160,11 @@ namespace LDD.Modding
                 base.Remove(typedElem);
         }
 
+        public void RemoveRange(IEnumerable<PartElement> elements)
+        {
+            base.RemoveRange(elements.OfType<T>());
+        }
+
         public int IndexOf(PartElement element)
         {
             if (element is T typedElem)
