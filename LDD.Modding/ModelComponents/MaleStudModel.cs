@@ -85,8 +85,13 @@ namespace LDD.Modding
             if (!ReferencedStuds.Any())
                 AddMessage("MODEL_STUDS_NOT_DEFINED", ValidationLevel.Warning);
 
+            if (ReferencedStuds.Count > 1)
+                AddMessage("MODEL_MORE_THAN_ONE_STUD", ValidationLevel.Warning);
+
             if (ReferencedStuds.Any())
                 messages.AddRange(ReferencedStuds.SelectMany(x => x.ValidateElement()));
+
+
 
             //if (Stud == null)
             //    AddMessage("MODEL_STUDS_NOT_DEFINED", ValidationLevel.Warning);
