@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
 using System.Diagnostics;
+using System.ComponentModel;
 
 namespace LDD.Modding
 {
@@ -25,14 +26,20 @@ namespace LDD.Modding
             AdjacentStuds = new ElementCollection<StudReference>(this);
         }
 
+        protected override void OnCollectionChanged(object sender, CollectionChangedEventArgs ccea)
+        {
+
+            base.OnCollectionChanged(sender, ccea);
+
+            if (ccea.Collection == ReferencedStuds)
+            {
+                TubeStud = ReferencedStuds.FirstOrDefault();
+            }
+        }
+
         internal override void LoadCullingInformation(MeshCulling culling)
         {
             base.LoadCullingInformation(culling);
-
-            TubeStud = ReferencedStuds.FirstOrDefault();
-
-            //var referencedStuds = ConvertFromRefs(culling.Studs).ToList();
-            //TubeStud = referencedStuds.FirstOrDefault();
 
             //if (!referencedStuds.Any())
             //    Debug.WriteLine("Tube culling does not reference a stud!");
@@ -112,14 +119,13 @@ namespace LDD.Modding
 
         public void AutoGenerateAdjacentStuds()
         {
-            var tubeStud = ReferencedStuds.FirstOrDefault();
-            if (tubeStud != null && tubeStud.FieldNode != null)
+            if (TubeStud != null && TubeStud.FieldNode != null)
             {
                 AdjacentStuds.Clear();
-                var custom2DField = tubeStud.Connector;
+                var custom2DField = TubeStud.Connector;
 
-                int posX = tubeStud.PositionX;
-                int posY = tubeStud.PositionY;
+                int posX = TubeStud.PositionX;
+                int posY = TubeStud.PositionY;
                 int[] offsets = new int[] { -1, 1 };
 
                 for (int i = 0; i < 2; i++)
@@ -132,7 +138,9 @@ namespace LDD.Modding
 
                         if (adjField != null)
                         {
-                            var studRef = new StudReference(tubeStud.ConnectionID, adjField.Index, 1, 0);
+                            var studRef = new StudReference(TubeStud.ConnectionID, adjField.Index, 1, 0);
+                            studRef.PositionX = adjField.X;
+                            studRef.PositionY = adjField.Y;
                             AdjacentStuds.Add(studRef);
                         }
                     }
