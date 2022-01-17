@@ -40,24 +40,39 @@ namespace LDD.Modding
             Axis = Vector3.UnitZ;
         }
 
-        public override ItemTransform ApplyTransform(ItemTransform transform, int instance)
+        //public override ItemTransform ApplyTransform(ItemTransform transform, int instance)
+        //{
+        //    if (instance == 0 || Repetitions == 0)
+        //        return transform.Clone();
+
+        //    var baseTrans = transform.ToMatrixD();
+
+        //    var axisMat = Matrix4d.FromDirection((Vector3d)Axis, Vector3d.UnitZ);
+        //    var originMat = Matrix4d.FromTranslation((Vector3d)Origin);
+
+        //    var patternMat = axisMat * originMat;
+        //    var itemRelativeMat = baseTrans * patternMat.Inverted();
+
+        //    float angleInc = EqualSpacing ? (Angle / (Repetitions + 1)) : Angle;
+        //    angleInc = MathHelper.ToRadian(angleInc);
+        //    var rotMatrix = Matrix4d.FromAngleAxis(angleInc * instance, Vector3d.UnitZ);
+
+        //    return ItemTransform.FromMatrix(itemRelativeMat * rotMatrix * patternMat);
+        //}
+
+        public override ItemTransform GetInstanceTransform(Matrix4d baseTransform, ItemTransform transform, int instance)
         {
             if (instance == 0 || Repetitions == 0)
                 return transform.Clone();
 
-            var baseTrans = transform.ToMatrixD();
 
-            var axisMat = Matrix4d.FromDirection((Vector3d)Axis, Vector3d.UnitZ);
-            var originMat = Matrix4d.FromTranslation((Vector3d)Origin);
-
-            var patternMat = axisMat * originMat;
-            var itemRelativeMat = baseTrans * patternMat.Inverted();
+            var itemRelativeMat = Matrix4d.GetRelativeMatrix(baseTransform, transform.ToMatrixD());
 
             float angleInc = EqualSpacing ? (Angle / (Repetitions + 1)) : Angle;
             angleInc = MathHelper.ToRadian(angleInc);
             var rotMatrix = Matrix4d.FromAngleAxis(angleInc * instance, Vector3d.UnitZ);
 
-            return ItemTransform.FromMatrix(itemRelativeMat * rotMatrix * patternMat);
+            return ItemTransform.FromMatrix(itemRelativeMat * rotMatrix * baseTransform);
         }
 
         public override Matrix4d GetPatternMatrix()

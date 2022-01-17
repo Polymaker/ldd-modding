@@ -30,7 +30,19 @@ namespace LDD.Modding
             return Elements.Select(r => r.Element);
         }
 
-        public abstract ItemTransform ApplyTransform(ItemTransform transform, int instance);
+        //public abstract ItemTransform ApplyTransform(ItemTransform transform, int instance);
+
+        public virtual LDD.Common.Simple3D.Matrix4d QuantizeTransform(LDD.Common.Simple3D.Matrix4d transform)
+        {
+            return transform;
+        }
+
+        public virtual ItemTransform ApplyTransform(ItemTransform transform, int instance)
+        {
+            return GetInstanceTransform(GetPatternMatrix(), transform, instance);
+        }
+
+        public abstract ItemTransform GetInstanceTransform(LDD.Common.Simple3D.Matrix4d baseTransform, ItemTransform transform, int instance);
 
         public abstract LDD.Common.Simple3D.Matrix4d GetPatternMatrix();
 

@@ -35,16 +35,27 @@ namespace LDD.Modding
             Offset = 1;
         }
 
-        public override ItemTransform ApplyTransform(ItemTransform transform, int instance)
+        public override ItemTransform GetInstanceTransform(Matrix4d baseTransform, ItemTransform transform, int instance)
         {
             if (instance == 0)
                 return transform.Clone();
 
-            var baseTrans = transform.ToMatrixD();
-            var translation = Matrix4d.FromTranslation((Vector3d)Direction * (Offset * instance));
-            var final = baseTrans * translation;
+            var direction = baseTransform.TransformVector(Vector3d.UnitZ);
+            var translation = Matrix4d.FromTranslation(direction * (Offset * instance));
+            var final = baseTransform * translation;
             return ItemTransform.FromMatrix(final);
         }
+
+        //public override ItemTransform ApplyTransform(ItemTransform transform, int instance)
+        //{
+        //    if (instance == 0)
+        //        return transform.Clone();
+
+        //    var baseTrans = transform.ToMatrixD();
+        //    var translation = Matrix4d.FromTranslation((Vector3d)Direction * (Offset * instance));
+        //    var final = baseTrans * translation;
+        //    return ItemTransform.FromMatrix(final);
+        //}
 
         public override XElement SerializeToXml()
         {

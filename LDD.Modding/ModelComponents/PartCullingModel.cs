@@ -129,13 +129,13 @@ namespace LDD.Modding
         {
             var messages = base.ValidateElement();
 
-            void AddMessage(string code, ValidationLevel level, params object[] args)
-            {
-                messages.Add(new ValidationMessage(this, code, level)
-                {
-                    MessageArguments = args
-                });
-            }
+            //void AddMessage(string code, ValidationLevel level, params object[] args)
+            //{
+            //    messages.Add(new ValidationMessage(this, code, level)
+            //    {
+            //        MessageArguments = args
+            //    });
+            //}
 
             //if (GetStudReferences().Any() && GetCustom2DField() == null)
             //    AddMessage("STUD_CONNECTION_NOT_DEFINED", ValidationLevel.Error);
