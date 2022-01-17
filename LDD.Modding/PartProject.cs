@@ -412,6 +412,7 @@ namespace LDD.Modding
             Bones.Clear();
             Aliases.Clear();
             ClonePatterns.Clear();
+            OutlinesConfigs.Clear();
 
             var rootElem = doc.Root;
 

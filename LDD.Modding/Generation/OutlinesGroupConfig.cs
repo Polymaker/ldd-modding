@@ -9,7 +9,7 @@ namespace LDD.Modding
 {
     public class OutlinesGroupConfig : PartElement
     {
-        public const string NODE_NAME = "ClonePattern";
+        public const string NODE_NAME = "OutlineGroupConfig";
 
         private double _BreakAngle;
 
