@@ -19,6 +19,7 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using LDD.Core.Parts;
 using LDD.Common.Simple3D;
+using System.Xml;
 
 namespace LDD.Modding
 {
@@ -132,6 +133,8 @@ namespace LDD.Modding
 
         public ElementCollection<ClonePattern> ClonePatterns { get; }
 
+        public OutlinesGroupConfig DefaultOutlineConfigs { get; private set; }
+
         public ElementCollection<OutlinesGroupConfig> OutlinesConfigs { get; }
 
         //private List<PartElement> _DeletedElements;
@@ -181,6 +184,11 @@ namespace LDD.Modding
             Meshes = new ElementCollection<ModelMesh>(this);
             ClonePatterns = new ElementCollection<ClonePattern>(this);
             //_DeletedElements = new List<PartElement>();
+            DefaultOutlineConfigs = new OutlinesGroupConfig()
+            {
+                AngleThreshold = 35,
+                Name = "Default"
+            }; 
             OutlinesConfigs = new ElementCollection<OutlinesGroupConfig>(this);
             Properties = new PartProperties(this);
             ProjectInfo = new ProjectInfo(this);
@@ -376,9 +384,13 @@ namespace LDD.Modding
             foreach (var pattern in ClonePatterns)
                 patternsElem.Add(pattern.SerializeToXml());
 
+
+            var outlinesElem = doc.Root.AddElement(nameof(OutlinesConfigs));
+            outlinesElem.WriteAttribute("Default" + nameof(OutlinesGroupConfig.AngleThreshold), DefaultOutlineConfigs.AngleThreshold);
+            outlinesElem.WriteAttribute("Default" + nameof(OutlinesGroupConfig.Thickness), DefaultOutlineConfigs.Thickness);
+
             if (OutlinesConfigs.Any())
             {
-                var outlinesElem = doc.Root.AddElement(nameof(OutlinesConfigs));
                 foreach (var config in OutlinesConfigs)
                     outlinesElem.Add(config.SerializeToXml());
             }
@@ -468,6 +480,11 @@ namespace LDD.Modding
 
             if (rootElem.HasElement(nameof(OutlinesConfigs), out XElement outlinesElem))
             {
+                if (outlinesElem.TryReadAttribute("Default" + nameof(OutlinesGroupConfig.AngleThreshold), out double defAngle))
+                    DefaultOutlineConfigs.AngleThreshold = defAngle;
+                if (outlinesElem.TryReadAttribute("Default" + nameof(OutlinesGroupConfig.Thickness), out double defThick))
+                    DefaultOutlineConfigs.Thickness = defThick;
+
                 foreach (var configElem in outlinesElem.Elements(OutlinesGroupConfig.NODE_NAME))
                     OutlinesConfigs.Add(OutlinesGroupConfig.FromXml(configElem));
             }
@@ -501,8 +518,16 @@ namespace LDD.Modding
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
+            //var xmlWriter = XmlWriter.Create(filename, new XmlWriterSettings
+            //{
+            //    Indent = true,
+            //    NewLineChars = "&#10;",
+            //    CheckCharacters = false,
+            //});
             var projectXml = GenerateProjectXml();
             projectXml.Save(filename);
+            //projectXml.WriteTo(xmlWriter);
+            //xmlWriter.Dispose();
 
             if (IsLoadedFromDisk && ProjectPath == filename)
             {
@@ -1678,7 +1703,7 @@ namespace LDD.Modding
         {
             var defaultConfig = new OutlinesGroupConfig
             {
-                BreakAngle = 35
+                AngleThreshold = 35
             };
             defaultConfig.Elements.AddRange(GetAllMeshReferences());
             return defaultConfig;
@@ -1686,19 +1711,22 @@ namespace LDD.Modding
 
         public void ComputeEdgeOutlines()
         {
-            var meshRefs = GetAllMeshReferences().ToList();
-            var unloadedMeshes = meshRefs.Select(x => x.ModelMesh).Where(x => !x.IsModelLoaded).Distinct().ToList();
+            var allMeshReferences = GetAllMeshReferences().ToList();
+            var unloadedMeshes = allMeshReferences.Select(x => x.ModelMesh).Where(x => !x.IsModelLoaded).Distinct().ToList();
 
             var outlinesGroups = OutlinesConfigs.ToList();
 
-            if (outlinesGroups.Count == 0)
+
+            if (DefaultOutlineConfigs.AngleThreshold > 0)
             {
-                var defaultConfig = new OutlinesGroupConfig
+                var groupedMeshRefs = outlinesGroups.SelectMany(x => x.Elements.OfType<ModelMeshReference>());
+                var remainingMeshes = allMeshReferences.Except(groupedMeshRefs);
+                if (remainingMeshes.Count() > 0)
                 {
-                    BreakAngle = 35
-                };
-                defaultConfig.Elements.AddRange(meshRefs);
-                outlinesGroups.Add(defaultConfig);
+                    DefaultOutlineConfigs.Elements.Clear();
+                    DefaultOutlineConfigs.Elements.AddRange(remainingMeshes);
+                    outlinesGroups.Insert(0, DefaultOutlineConfigs);
+                }
             }
 
             foreach (var layerGroup in outlinesGroups)
@@ -1711,6 +1739,9 @@ namespace LDD.Modding
                 foreach (var mg in meshesGeoms)
                     mg.Item2.ClearRoundEdgeData();
 
+
+                var generator = new OutlinesGenerator((float)layerGroup.AngleThreshold, (float)layerGroup.Thickness);
+
                 if (meshesGeoms.Any(x => x.Item1.Parent is FemaleStudModel fsm && fsm.ReplacementMeshes.Any()))
                 {
                     var nonFSM = meshesGeoms.Where(x => !(x.Item1.Parent is FemaleStudModel)).ToList();
@@ -1721,20 +1752,19 @@ namespace LDD.Modding
                         .Where(x => x.Item1.Parent is FemaleStudModel fsm && fsm.ReplacementMeshes.Contains(x.Item1)).ToList();
 
                     var triangles = nonFSM.Concat(baseFSM).SelectMany(x => x.Item2.Triangles);
-                    OutlinesGenerator.GenerateOutlines(triangles, (float)layerGroup.BreakAngle);
+                    generator.GenerateOutlines(triangles);
                     foreach (var mg in nonFSM.Concat(baseFSM))
                         mg.Item1.UpdateMeshOutlines(mg.Item2);
 
                     triangles = nonFSM.Concat(altFSM).SelectMany(x => x.Item2.Triangles);
-                    OutlinesGenerator.GenerateOutlines(triangles, (float)layerGroup.BreakAngle);
+                    generator.GenerateOutlines(triangles);
                     foreach (var mg in altFSM)
                         mg.Item1.UpdateMeshOutlines(mg.Item2);
                 }
                 else
                 {
                     var triangles = meshesGeoms.SelectMany(x => x.Item2.Triangles);
-                    //ShaderDataGenerator.ComputeEdgeOutlines(triangles, breakAngle);
-                    OutlinesGenerator.GenerateOutlines(triangles, (float)layerGroup.BreakAngle);
+                    generator.GenerateOutlines(triangles);
 
                     foreach (var mg in meshesGeoms)
                         mg.Item1.UpdateMeshOutlines(mg.Item2);

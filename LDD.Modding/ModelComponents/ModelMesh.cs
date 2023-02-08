@@ -108,7 +108,6 @@ namespace LDD.Modding
             {
                 elem.Add(geomElem.Nodes().ToArray());
                 elem.Add(geomElem.Attributes().ToArray());
-                
             }
             else
             {

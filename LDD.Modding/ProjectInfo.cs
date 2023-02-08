@@ -91,7 +91,7 @@ namespace LDD.Modding
             Authors = element.ReadElement(nameof(Authors), string.Empty);
             DerivedFrom = element.ReadElement(nameof(DerivedFrom), string.Empty);
             OriginalAuthor = element.ReadElement(nameof(OriginalAuthor), string.Empty);
-            Comments = element.ReadElement(nameof(Comments), string.Empty);
+            Comments = element.ReadElement(nameof(Comments), string.Empty).Replace("\n", Environment.NewLine);
             LastModification = element.ReadElement(nameof(LastModification), DateTime.Now);
 
             base.LoadFromXml(element);
@@ -110,7 +110,7 @@ namespace LDD.Modding
                     result = match.Groups[1].Value;
                 return match.Success;
             }
-
+            bool hasEnteredExtraComments = false;
             using (var sr = new StringReader(comments))
             {
                 string line;
@@ -129,19 +129,28 @@ namespace LDD.Modding
                     {
                         OriginalAuthor = originalAuthor;
                     }
-                    else if (IsMatch(line, "(\\d{4}.\\d{1,2}.\\d{1,2}|\\d{1,2}.\\d{1,2}.\\d{4})", out string dateStr))
+                    else if (!hasEnteredExtraComments && IsMatch(line, "last.+?\\s?:?\\s*(\\d{4}-\\d{1,2}-\\d{1,2})", out string dateStr1))
                     {
-                        
+                        string[] dateParts = dateStr1.Split('-');
+                        int year = int.Parse(dateParts[0]);
+                        int month = int.Parse(dateParts[1]);
+                        int day = int.Parse(dateParts[2]);
+                        LastModification = new DateTime(year, month, day);
                     }
+                    //else if (IsMatch(line, "(\\d{1,2}-\\d{1,2}-\\d{4})", out string dateStr2))
+                    //{
+
+                    //}
                     else if (IsMatch(line, "comments\\s?:? (.+)", out string comment) && string.IsNullOrEmpty(Comments))
                     {
                         Comments = comment;
+                        hasEnteredExtraComments = true;
                     }
-                    else if (!string.IsNullOrEmpty(line))
+                    else if (!string.IsNullOrWhiteSpace(line))
                     {
                         if (!string.IsNullOrEmpty(Comments))
                             Comments += Environment.NewLine;
-                        Comments += line;
+                        Comments += line.TrimStart();
                     }
                 }
             }
@@ -153,8 +162,12 @@ namespace LDD.Modding
             void AppendComment(string value)
             {
                 //if (!string.IsNullOrEmpty(comment))
-                comment += Environment.NewLine;
-                comment += "\t" + value;
+                string[] commentLines = value.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+                foreach (string line in commentLines)
+                {
+                    comment += Environment.NewLine;
+                    comment += "\t" + line;
+                }
             }
 
             if (!string.IsNullOrEmpty(DerivedFrom))
@@ -172,7 +185,7 @@ namespace LDD.Modding
             }
 
             if (LastModification != DateTime.MinValue)
-                AppendComment($"Last modification: {LastModification:yyyy-MM-dd}");
+                AppendComment(FormattableString.Invariant($"Last modification: {LastModification:yyyy-MM-dd}"));
 
             if (!string.IsNullOrEmpty(Comments))
                 AppendComment($"Comments: {Comments}");
