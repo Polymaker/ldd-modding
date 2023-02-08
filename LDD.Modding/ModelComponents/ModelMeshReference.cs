@@ -143,6 +143,8 @@ namespace LDD.Modding
                         modelGeometry.TransformVertices(Transform.ToMatrix());
                     }
                 }
+                else
+                    throw new Exception($"Could not load mesh for model {modelMesh.Name}");
             }
 
             return modelGeometry;

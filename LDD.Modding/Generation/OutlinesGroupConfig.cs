@@ -9,21 +9,29 @@ namespace LDD.Modding
 {
     public class OutlinesGroupConfig : PartElement
     {
-        public const string NODE_NAME = "OutlineGroupConfig";
+        public const string NODE_NAME = "OutlineGroup";
 
-        private double _BreakAngle;
+        private double _AngleThreshold;
+        private double _Thickness;
 
-        public double BreakAngle
+        public double AngleThreshold
         {
-            get => _BreakAngle;
-            set => SetPropertyValue(ref _BreakAngle, value);
+            get => _AngleThreshold;
+            set => SetPropertyValue(ref _AngleThreshold, value);
+        }
+
+        public double Thickness
+        {
+            get => _Thickness;
+            set => SetPropertyValue(ref _Thickness, value);
         }
 
         public ElementReferenceCollection Elements { get; set; }
 
         public OutlinesGroupConfig()
         {
-            _BreakAngle = 35;
+            _AngleThreshold = 35;
+            _Thickness = 1;
             Elements = new ElementReferenceCollection(this);
             Elements.SupportedTypes.Add(typeof(ModelMeshReference));
             TrackCollectionChanges(Elements);
@@ -33,7 +41,8 @@ namespace LDD.Modding
         {
             var elem = SerializeToXmlBase(NODE_NAME);
 
-            elem.WriteAttribute(nameof(BreakAngle), BreakAngle);
+            elem.WriteAttribute(nameof(AngleThreshold), AngleThreshold);
+            elem.WriteAttribute(nameof(Thickness), Thickness);
 
             elem.Add(Elements.Serialize(nameof(Elements)));
 
@@ -44,7 +53,8 @@ namespace LDD.Modding
         {
             base.LoadFromXml(element);
 
-            BreakAngle = element.ReadAttribute(nameof(BreakAngle), 35d);
+            AngleThreshold = element.ReadAttribute(nameof(AngleThreshold), 35d);
+            Thickness = element.ReadAttribute(nameof(Thickness), 1d);
             Elements.Clear();
             if (element.HasElement(nameof(Elements), out XElement elemsElem))
                 Elements.LoadFromXml(elemsElem);
